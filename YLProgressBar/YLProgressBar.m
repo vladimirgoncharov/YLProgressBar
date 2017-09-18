@@ -43,7 +43,7 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
 @property (nonatomic, assign) double  stripesOffset;
 @property (nonatomic, assign) CGFloat internalCornerRadius;
 @property (nonatomic, strong) NSTimer *stripesTimer;
-@property (nonatomic, strong) NSArray *colors;
+@property (nonatomic, strong) NSArray <UIColor *> *colors;
 @property (nonatomic, strong) NSTimer *progressTargetTimer;
 @property (nonatomic, assign) CGFloat progressTargetValue;
 
@@ -263,7 +263,7 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
   }
 }
 
-- (void)setProgressTintColors:(NSArray *)progressTintColors
+- (void)setProgressTintColors:(NSArray <UIColor *> *)progressTintColors
 {
   NSAssert(progressTintColors, @"progressTintColors must not be null");
   NSAssert([progressTintColors count], @"progressTintColors must contain at least one element");
@@ -279,6 +279,45 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
     [colors addObject:(id)color.CGColor];
   }
   self.colors = colors;
+  if (colors.count != self.progressTintLocations.count) {
+      self.progressTintLocations = [self __calculateDefaultLocations:progressTintColors.count];
+  }
+}
+
+- (void)setProgressTintLocations:(NSArray<NSNumber *> *)progressTintLocations
+{
+    NSUInteger colorCount = [_colors count];
+    BOOL isValidLocations = colorCount == progressTintLocations.count;
+    if (isValidLocations) {
+        for (NSNumber *currentLocation in progressTintLocations)
+        {
+            if ([currentLocation floatValue] < 0.0 ||
+                [currentLocation floatValue] > 1.0)
+            {
+                isValidLocations = false;
+                break;
+            }
+        }
+    }
+    
+    if (!isValidLocations)
+    {
+        _progressTintLocations = [self __calculateDefaultLocations:colorCount];
+    } else {
+        _progressTintLocations = progressTintLocations;
+    }
+}
+
+- (NSArray <NSNumber *> *)__calculateDefaultLocations:(NSUInteger)colorCount {
+    CGFloat delta      = 1.0f / colorCount;
+    CGFloat semi_delta = delta / 2.0f;
+    NSMutableArray <NSNumber *> * locations = [[NSMutableArray alloc] init];
+    for (NSInteger i = 0; i < colorCount; i++)
+    {
+        CGFloat value = delta * i + semi_delta;
+        [locations addObject:[NSNumber numberWithFloat:value]];
+    }
+    return [locations copy];
 }
 
 #pragma mark - Public Methods
@@ -470,15 +509,11 @@ const CGFloat YLProgressBarDefaultProgress = 0.3f;
     CGContextClip(context);
 
     CFArrayRef colorRefs  = (__bridge CFArrayRef)_colors;
-    NSUInteger colorCount = [_colors count];
-
-    CGFloat delta      = 1.0f / [_colors count];
-    CGFloat semi_delta = delta / 2.0f;
-    CGFloat locations[colorCount];
-
-    for (NSInteger i = 0; i < colorCount; i++)
+    NSUInteger locationsCount = [self.progressTintLocations count];
+    CGFloat locations[locationsCount];
+    for (NSInteger i = 0; i < locationsCount; i++)
     {
-      locations[i] = delta * i + semi_delta;
+      locations[i] = self.progressTintLocations[i].floatValue;
     }
 
     CGGradientRef gradient = CGGradientCreateWithColors(colorSpace, colorRefs, locations);
