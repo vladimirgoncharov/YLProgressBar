@@ -228,10 +228,17 @@ IB_DESIGNABLE @interface YLProgressBar : UIView
 /**
  * @abstract The colors shown for the portion of the progress bar
  * that is filled.
- * @discussion All the colors in the array are drawn as a gradient
- * visual of equal size.
  */
-@property (nonatomic, strong, nonnull) NSArray *progressTintColors; //UI_APPEARANCE_SELECTOR;
+@property (nonatomic, copy, nonnull) NSArray<UIColor *> *progressTintColors; //UI_APPEARANCE_SELECTOR;
+
+/**
+ * @abstract The positions shown for the portion of the progress bar
+ * that is filled.
+ * @discussion All the positions in the array are drawn as a gradient
+ * visual of equal size if the number of the locations not equal progressTintColors count or
+ * the locations are less 0 and more 1.
+ */
+@property (nonatomic, copy, nonnull) NSArray<NSNumber *> *progressTintLocations; //UI_APPEARANCE_SELECTOR;
 
 /**
  * @abstract The color shown for the portion of the progress bar that is filled.
